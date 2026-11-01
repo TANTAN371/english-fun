@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://tantan371.github.io/english-fun/sitemap.xml
