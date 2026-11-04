@@ -130,6 +130,15 @@
   .printMenu{position:absolute;top:56px;left:14px;z-index:5;background:#fff;border-radius:16px;padding:8px;box-shadow:0 10px 26px rgba(0,0,0,.25);display:flex;flex-direction:column;gap:6px}
   .printMenu.hidden{display:none}
   .printMenu button{margin:0;font-size:15px;padding:8px 12px;background:#f3f4f6;color:#111;box-shadow:none;white-space:nowrap}
+  /* מצא את ההבדלים */
+  #diff{max-width:640px}
+  #diffBoard{display:flex;align-items:stretch;justify-content:center;margin:12px auto;max-width:580px}
+  .diffPanel{position:relative;container-type:size;width:48%;aspect-ratio:3/4;background:#eef2ff;border-radius:14px;overflow:hidden;cursor:pointer;box-shadow:inset 0 0 0 2px #c7d2fe}
+  .diffDivider{width:6px;background:#2563eb;border-radius:4px;margin:0 4px}
+  .diffItem{position:absolute;transform:translate(-50%,-50%);line-height:1;user-select:none;pointer-events:none}
+  .diffCircle{position:absolute;transform:translate(-50%,-50%);width:22cqw;height:22cqw;border:4px solid #ef4444;border-radius:50%;pointer-events:none;box-sizing:border-box;box-shadow:0 0 0 2px #fff}
+  #diffAsk input{max-width:260px;margin:6px auto;display:block}
+  #diffPrintNote{display:none}
 </style>
 </head>
 <body>
@@ -195,7 +204,7 @@
 
 <div class="card" id="setup">
   <div class="logo">E</div>
-  <h1 id="welcomeTitle">🌈 ברוכה הבאה לאנגלית ועברית 🌈</h1>
+  <h1 id="welcomeTitle">🌈 ברוכה הבאה ל-English fun 🌈</h1>
   <div class="hint" style="direction:ltr;font-weight:bold">English &amp; Hebrew</div>
   <div class="hint" id="lobbyBest"></div>
   <label>איך קוראים לך?</label>
@@ -260,6 +269,7 @@
     <button class="catBtn" onclick="startSpeed()" style="background:linear-gradient(90deg,#facc15,#f97316)"><span class="catIcon">⚡</span>מצב מהירות</button>
     <button class="catBtn" onclick="openReadingMenu()" style="background:linear-gradient(90deg,#34d399,#60a5fa)"><span class="catIcon">📚</span>טקסטים</button>
     <button class="catBtn" onclick="openShop()" style="background:linear-gradient(90deg,#fb923c,#f472b6)"><span class="catIcon">🛒</span>חנות תיבות</button>
+    <button class="catBtn" onclick="startDiff()" style="background:linear-gradient(90deg,#22c55e,#0ea5e9)"><span class="catIcon">🔍</span>מצא את ההבדלים</button>
   </div>
 </div>
 
@@ -353,6 +363,26 @@
     <div class="hint" id="readResult"></div>
   </div>
   <button class="backBtn" onclick="openReadingMenu()">⬅️ לרשימת הטקסטים</button>
+  <button class="backBtn" onclick="show('categories')">⬅️ חזרה לקטגוריות</button>
+</div>
+
+<div class="card hidden" id="diff">
+  <h1 id="diffTitle">מצא את ההבדלים</h1>
+  <div class="hint">יש 8 הבדלים בין שתי התמונות. לחצי על הבדל שמצאת, וכתבי אותו באנגלית.</div>
+  <div class="hint" id="diffProgress"></div>
+  <div id="diffBoard">
+    <div class="diffPanel" id="diffLeft" onclick="diffClick(event,this)"></div>
+    <div class="diffDivider"></div>
+    <div class="diffPanel" id="diffRight" onclick="diffClick(event,this)"></div>
+  </div>
+  <div id="diffAsk" class="hidden">
+    <div class="hint" id="diffHe" style="font-weight:bold"></div>
+    <input class="en" id="diffInput" autocomplete="off" onkeydown="if(event.key==='Enter')checkDiff()">
+    <button onclick="checkDiff()">בדיקה ✅</button>
+    <div id="diffFeedback"></div>
+  </div>
+  <div class="hint" id="diffResult" style="font-weight:bold;color:#15803d"></div>
+  <button class="backBtn" onclick="show('categories')">⬅️ חזרה לקטגוריות</button>
 </div>
 
 <div class="card hidden" id="done">
@@ -938,7 +968,7 @@ function renderStickerTab(){
 // ברכה אישית: מופיעה בכותרת הלובי ומתעדכנת בזמן הכתיבה של השם
 function updateWelcome(){
   const n = $("name").value.trim();
-  $("welcomeTitle").textContent = n ? `🌈 ברוך הבא, ${n}! 🌈` : "🌈 ברוכה הבאה לאנגלית ועברית 🌈";
+  $("welcomeTitle").textContent = n ? `🌈 ברוך הבא, ${n}! 🌈` : "🌈 ברוכה הבאה ל-English fun 🌈";
 }
 
 // הספר שלי: כל מילה שהושלמה נשמרת כאן עם התמונה, גם אם המאגר מתחיל מחדש
@@ -1209,10 +1239,10 @@ function showPopup(amount = 10){
 let currentScreen = "setup";
 function show(id){
   currentScreen = id;
-  ["setup","learn","game","speed","done","shop","readMenu","readView","categories"].forEach(s => $(s).classList.add("hidden"));
+  ["setup","learn","game","speed","done","shop","readMenu","readView","categories","diff"].forEach(s => $(s).classList.add("hidden"));
   $(id).classList.remove("hidden");
   // בחנות יש כפתור חזרה משלה, לכן הכפתורים הקבועים מוסתרים
-  $("lobbyBtn").classList.toggle("hidden", id === "setup" || id === "done" || id === "shop" || id === "categories");
+  $("lobbyBtn").classList.toggle("hidden", id === "setup" || id === "done" || id === "shop" || id === "categories" || id === "diff");
   $("backDetailsBtn").classList.toggle("hidden", id !== "categories");
   $("bookBtn").classList.toggle("hidden", id === "shop");
   // האותיות בצדדים מוצגות רק בלובי, ולא מסתירות שום דבר במסכים אחרים
@@ -1510,6 +1540,229 @@ function finish(){
   $("doneGoal").textContent = `היעד שלך: ${user.goal} מילים`;
 }
 
+// ===== מצא את ההבדלים =====
+const DIFF_RADIUS = { "1":17, "2":16, "3":14, "4":13, "5":12, "6":11 };
+const DIFF_SCENES = {
+  "1": { bg:"linear-gradient(#bfe8ff 0%,#bfe8ff 54%,#8ed66f 54%,#58b347 100%)", base:[
+      {id:"su",e:"☀️",x:14,y:11,s:13},{id:"c1",e:"☁️",x:48,y:12,s:12},{id:"c2",e:"☁️",x:78,y:9,s:11},
+      {id:"b1",e:"🐦",x:36,y:20,s:9},{id:"b2",e:"🐦",x:62,y:22,s:9},
+      {id:"t1",e:"🌳",x:18,y:44,s:20},{id:"t2",e:"🌳",x:50,y:42,s:18},{id:"t3",e:"🌳",x:84,y:46,s:20},
+      {id:"bu1",e:"🌿",x:8,y:62,s:12},{id:"bu2",e:"🌿",x:92,y:64,s:12},
+      {id:"f1",e:"🌼",x:20,y:80,s:11},{id:"f2",e:"🌷",x:10,y:72,s:11},{id:"f3",e:"🌸",x:30,y:74,s:11},
+      {id:"f4",e:"🌻",x:40,y:82,s:12},{id:"f5",e:"🌷",x:52,y:76,s:11},{id:"f6",e:"🌼",x:62,y:82,s:11},
+      {id:"f7",e:"🌸",x:72,y:74,s:11},{id:"f8",e:"🌻",x:84,y:82,s:12},{id:"f9",e:"🌷",x:16,y:90,s:10},
+      {id:"f10",e:"🌸",x:46,y:90,s:10},{id:"f11",e:"🌼",x:68,y:90,s:10},{id:"m1",e:"🍄",x:26,y:90,s:9},
+      {id:"bug",e:"🐞",x:58,y:66,s:9}],
+    diffs:[
+      {type:"remove",id:"f1",he:"הפרח",en:"flower"},
+      {type:"add",e:"🦋",x:60,y:30,s:12,he:"הפרפר",en:"butterfly"},
+      {type:"remove",id:"b1",he:"הציפור",en:"bird"},
+      {type:"remove",id:"c2",he:"הענן",en:"cloud"},
+      {type:"add",e:"🐝",x:30,y:62,s:10,he:"הדבורה",en:"bee"},
+      {type:"add",e:"🍎",x:50,y:34,s:11,he:"התפוח",en:"apple"},
+      {type:"remove",id:"m1",he:"הפטרייה",en:"mushroom"},
+      {type:"add",e:"🐌",x:76,y:92,s:10,he:"השבלול",en:"snail"}] },
+  "2": { bg:"linear-gradient(#bfe8ff 0%,#bfe8ff 44%,#6fc7e8 44%,#4aa6cf 62%,#f3e2a6 62%,#ecd68a 100%)", base:[
+      {id:"su",e:"☀️",x:16,y:10,s:12},{id:"cl",e:"☁️",x:70,y:10,s:11},{id:"c2",e:"☁️",x:44,y:8,s:10},
+      {id:"bi1",e:"🕊️",x:34,y:16,s:9},{id:"bi2",e:"🕊️",x:58,y:20,s:9},
+      {id:"bo",e:"⛵",x:72,y:50,s:16},{id:"fi1",e:"🐟",x:24,y:55,s:11},{id:"fi2",e:"🐟",x:48,y:57,s:10},
+      {id:"fi3",e:"🐠",x:86,y:56,s:10},
+      {id:"um",e:"⛱️",x:22,y:66,s:17},{id:"ba",e:"🏐",x:46,y:72,s:12},{id:"cr",e:"🦀",x:60,y:82,s:12},
+      {id:"sh1",e:"🐚",x:14,y:86,s:10},{id:"sh2",e:"🐚",x:80,y:86,s:10},{id:"bk",e:"🪣",x:36,y:86,s:11},
+      {id:"ca",e:"🏰",x:84,y:70,s:14},{id:"st",e:"⭐",x:52,y:90,s:9}],
+    diffs:[
+      {type:"remove",id:"fi1",he:"הדג",en:"fish"},
+      {type:"swap",id:"bo",e2:"🚤",he:"הסירה",en:"boat"},
+      {type:"add",e:"🐙",x:34,y:58,s:12,he:"התמנון",en:"octopus"},
+      {type:"remove",id:"cl",he:"הענן",en:"cloud"},
+      {type:"add",e:"🪁",x:30,y:24,s:13,he:"העפיפון",en:"kite"},
+      {type:"remove",id:"cr",he:"הסרטן",en:"crab"},
+      {type:"swap",id:"ba",e2:"🏀",he:"הכדור",en:"ball"},
+      {type:"add",e:"🐬",x:88,y:48,s:12,he:"הדולפין",en:"dolphin"}] },
+  "3": { bg:"linear-gradient(#fdebcb 0%,#fdebcb 66%,#cc9a5c 66%,#b07f44 100%)", base:[
+      {id:"cl",e:"🕐",x:72,y:14,s:13},{id:"la",e:"💡",x:58,y:15,s:12},
+      {id:"bk1",e:"📖",x:20,y:34,s:14},{id:"bk2",e:"📖",x:30,y:40,s:12},{id:"bks",e:"📚",x:64,y:40,s:13},
+      {id:"pe1",e:"✏️",x:45,y:30,s:12},{id:"pe2",e:"✏️",x:55,y:34,s:11},{id:"pen",e:"🖊️",x:40,y:46,s:10},
+      {id:"ap",e:"🍎",x:50,y:52,s:11},{id:"gl",e:"🌍",x:16,y:50,s:13},{id:"ab",e:"🧮",x:84,y:52,s:14},
+      {id:"cu",e:"☕",x:88,y:30,s:10},
+      {id:"ch1",e:"🪑",x:24,y:76,s:16},{id:"ch2",e:"🪑",x:68,y:76,s:16},
+      {id:"ru",e:"📏",x:40,y:74,s:12},{id:"pd",e:"📐",x:12,y:74,s:11},{id:"bp",e:"🎒",x:82,y:82,s:14},
+      {id:"bin",e:"🗑️",x:92,y:80,s:11}],
+    diffs:[
+      {type:"remove",id:"ap",he:"התפוח",en:"apple"},
+      {type:"swap",id:"pe1",e2:"🖍️",he:"הצבע",en:"crayon"},
+      {type:"add",e:"🐭",x:60,y:88,s:11,he:"העכבר",en:"mouse"},
+      {type:"remove",id:"cl",he:"השעון",en:"clock"},
+      {type:"swap",id:"gl",e2:"🌎",he:"כדור הארץ",en:"globe|earth"},
+      {type:"add",e:"🌼",x:90,y:66,s:11,he:"הפרח",en:"flower"},
+      {type:"remove",id:"la",he:"המנורה",en:"lamp"},
+      {type:"swap",id:"bp",e2:"👜",he:"התיק",en:"bag"}] },
+  "4": { bg:"linear-gradient(#e6f0f5 0%,#e6f0f5 58%,#d9b892 58%,#c19363 100%)", base:[
+      {id:"sa",e:"🧂",x:88,y:20,s:10},{id:"cup",e:"🫙",x:14,y:22,s:11},
+      {id:"pa",e:"🍳",x:22,y:36,s:15},{id:"eg1",e:"🥚",x:46,y:28,s:11},{id:"eg2",e:"🥚",x:52,y:33,s:10},
+      {id:"ch",e:"🧀",x:70,y:30,s:12},{id:"lem",e:"🍋",x:30,y:48,s:10},
+      {id:"br",e:"🍞",x:16,y:66,s:13},{id:"mi",e:"🥛",x:38,y:60,s:12},{id:"ban",e:"🍌",x:60,y:62,s:12},
+      {id:"kn",e:"🔪",x:84,y:54,s:12},{id:"to1",e:"🍅",x:28,y:80,s:11},{id:"to2",e:"🍅",x:36,y:82,s:10},
+      {id:"tp",e:"🫖",x:74,y:80,s:14},{id:"ca",e:"🥕",x:52,y:80,s:11},{id:"ap",e:"🍎",x:64,y:78,s:11},
+      {id:"br2",e:"🥦",x:14,y:82,s:11},{id:"pl",e:"🍽️",x:46,y:70,s:12},{id:"sp",e:"🥄",x:90,y:66,s:10}],
+    diffs:[
+      {type:"remove",id:"eg1",he:"הביצה",en:"egg"},
+      {type:"swap",id:"ban",e2:"🍎",he:"התפוח",en:"apple"},
+      {type:"add",e:"🐟",x:12,y:72,s:12,he:"הדג",en:"fish"},
+      {type:"swap",id:"br",e2:"🥐",he:"הקרואסון",en:"croissant|bread"},
+      {type:"remove",id:"mi",he:"החלב",en:"milk"},
+      {type:"swap",id:"to1",e2:"🍊",he:"התפוז",en:"orange"},
+      {type:"add",e:"🧁",x:34,y:18,s:12,he:"העוגה",en:"cake|cupcake"},
+      {type:"remove",id:"kn",he:"הסכין",en:"knife"}] },
+  "5": { bg:"linear-gradient(#cfeeff 0%,#cfeeff 54%,#9aa3ad 54%,#6b7682 100%)", base:[
+      {id:"su",e:"☀️",x:12,y:10,s:11},{id:"c1",e:"☁️",x:40,y:10,s:11},{id:"c2",e:"☁️",x:66,y:8,s:10},
+      {id:"ho",e:"🏠",x:16,y:32,s:15},{id:"bg1",e:"🏢",x:34,y:26,s:17},{id:"bg2",e:"🏢",x:52,y:24,s:18},
+      {id:"bg3",e:"🏬",x:72,y:30,s:16},{id:"tr1",e:"🌳",x:86,y:36,s:14},{id:"tr2",e:"🌳",x:26,y:44,s:12},
+      {id:"bd",e:"🐦",x:58,y:16,s:9},{id:"tl1",e:"🚦",x:64,y:48,s:11},{id:"tl2",e:"🚦",x:20,y:52,s:10},
+      {id:"sg",e:"🪧",x:10,y:58,s:11},{id:"ca",e:"🚗",x:28,y:64,s:13},{id:"ta",e:"🚕",x:58,y:66,s:13},
+      {id:"bus",e:"🚌",x:86,y:68,s:14},{id:"bk",e:"🚲",x:42,y:80,s:12},{id:"dg",e:"🐕",x:52,y:84,s:11},
+      {id:"sp",e:"🏪",x:80,y:56,s:13},{id:"mo",e:"🛵",x:70,y:82,s:12}],
+    diffs:[
+      {type:"swap",id:"ca",e2:"🚙",he:"המכונית",en:"car"},
+      {type:"remove",id:"bk",he:"האופניים",en:"bike|bicycle"},
+      {type:"swap",id:"tl1",e2:"🚥",he:"הרמזור",en:"traffic light|light"},
+      {type:"add",e:"🐈",x:34,y:86,s:11,he:"החתול",en:"cat"},
+      {type:"remove",id:"bd",he:"הציפור",en:"bird"},
+      {type:"swap",id:"ta",e2:"🚐",he:"הטנדר",en:"van"},
+      {type:"add",e:"🎈",x:22,y:18,s:12,he:"הבלון",en:"balloon"},
+      {type:"swap",id:"sp",e2:"🏦",he:"הבנק",en:"bank"}] },
+  "6": { bg:"linear-gradient(#0b1026 0%,#141b3a 55%,#1e2a55 100%)", base:[
+      {id:"mo",e:"🌙",x:18,y:16,s:15},{id:"pl",e:"🪐",x:68,y:22,s:16},{id:"ro",e:"🚀",x:44,y:52,s:16},
+      {id:"sa",e:"🛰️",x:78,y:54,s:12},{id:"co",e:"☄️",x:30,y:40,s:12},{id:"as",e:"👨‍🚀",x:52,y:78,s:15},
+      {id:"uf",e:"🛸",x:22,y:62,s:14},
+      {id:"s1",e:"⭐",x:60,y:12,s:9},{id:"s2",e:"⭐",x:84,y:38,s:8},{id:"s3",e:"⭐",x:14,y:38,s:8},
+      {id:"s4",e:"✨",x:88,y:74,s:10},{id:"s5",e:"⭐",x:40,y:14,s:8},{id:"s6",e:"⭐",x:30,y:70,s:8},
+      {id:"s7",e:"✨",x:62,y:66,s:9},{id:"s8",e:"⭐",x:10,y:72,s:8},{id:"s9",e:"🌟",x:46,y:30,s:10},
+      {id:"s10",e:"⭐",x:74,y:80,s:8},{id:"s11",e:"⭐",x:90,y:18,s:8},{id:"s12",e:"✨",x:50,y:90,s:9}],
+    diffs:[
+      {type:"swap",id:"mo",e2:"🌕",he:"הירח",en:"moon"},
+      {type:"remove",id:"co",he:"השביט",en:"comet"},
+      {type:"swap",id:"pl",e2:"🌍",he:"כדור הארץ",en:"earth|planet"},
+      {type:"add",e:"👽",x:36,y:82,s:12,he:"החייזר",en:"alien"},
+      {type:"remove",id:"sa",he:"הלוויין",en:"satellite"},
+      {type:"swap",id:"as",e2:"🧑‍🚀",he:"האסטרונאוט",en:"astronaut"},
+      {type:"add",e:"🔭",x:84,y:86,s:13,he:"הטלסקופ",en:"telescope"},
+      {type:"remove",id:"s1",he:"הכוכב",en:"star"}] }
+};
+let DIFF_CUR = null, diffSolved = [], diffPendingIdx = -1;
+
+function startDiff(){
+  if (!activeName) return;
+  const g = $("grade").value || "1";
+  const sc = DIFF_SCENES[g];
+  if (!sc){ return; }
+  DIFF_CUR = { grade: g, base: sc.base, diffs: sc.diffs, bg: sc.bg };
+  diffSolved = [];
+  diffPendingIdx = -1;
+  $("diffTitle").textContent = "מצא את ההבדלים — כיתה " + (HEB_GRADE[g] || g);
+  $("diffAsk").classList.add("hidden");
+  $("diffResult").textContent = "";
+  renderDiff();
+  show("diff");
+}
+
+function diffItemHtml(e, x, y, s){
+  return `<span class="diffItem" style="left:${x}%;top:${y}%;font-size:${s}cqw">${e}</span>`;
+}
+
+function renderDiff(){
+  const sc = DIFF_CUR;
+  const removed = new Set(), swap = {};
+  sc.diffs.forEach(d => { if (d.type === "remove") removed.add(d.id); if (d.type === "swap") swap[d.id] = d.e2; });
+  const left = sc.base.map(it => diffItemHtml(it.e, it.x, it.y, it.s)).join("");
+  let right = sc.base.filter(it => !removed.has(it.id)).map(it => diffItemHtml(swap[it.id] || it.e, it.x, it.y, it.s)).join("");
+  right += sc.diffs.filter(d => d.type === "add").map(d => diffItemHtml(d.e, d.x, d.y, d.s)).join("");
+  $("diffLeft").innerHTML = left;
+  $("diffRight").innerHTML = right;
+  $("diffLeft").style.background = DIFF_CUR.bg;
+  $("diffRight").style.background = DIFF_CUR.bg;
+  diffSolved.forEach(i => drawDiffCircle(i));
+  updateDiffProgress();
+}
+
+function diffHotspot(d){
+  if (d.type === "add") return [d.x, d.y];
+  const it = DIFF_CUR.base.find(b => b.id === d.id);
+  return [it.x, it.y];
+}
+
+function drawDiffCircle(i){
+  const [hx, hy] = diffHotspot(DIFF_CUR.diffs[i]);
+  ["diffLeft", "diffRight"].forEach(pid => {
+    const c = document.createElement("div");
+    c.className = "diffCircle";
+    c.style.left = hx + "%";
+    c.style.top = hy + "%";
+    $(pid).appendChild(c);
+  });
+}
+
+function updateDiffProgress(){
+  $("diffProgress").textContent = `מצאת ${diffSolved.length} מתוך ${DIFF_CUR.diffs.length} הבדלים`;
+}
+
+function diffClick(ev, panel){
+  if (!DIFF_CUR || diffPendingIdx >= 0) return;
+  const r = panel.getBoundingClientRect();
+  const px = ev.clientX - r.left, py = ev.clientY - r.top;
+  const rad = (DIFF_RADIUS[DIFF_CUR.grade] || 13) / 100 * r.width;
+  let best = -1, bestDist = 1e9;
+  DIFF_CUR.diffs.forEach((d, i) => {
+    if (diffSolved.includes(i)) return;
+    const [hx, hy] = diffHotspot(d);
+    const dx = px - hx / 100 * r.width, dy = py - hy / 100 * r.height;
+    const dist = Math.hypot(dx, dy);
+    if (dist < rad && dist < bestDist){ bestDist = dist; best = i; }
+  });
+  if (best >= 0) foundDiff(best);
+}
+
+function foundDiff(i){
+  diffSolved.push(i);
+  drawDiffCircle(i);
+  diffPendingIdx = i;
+  const d = DIFF_CUR.diffs[i];
+  $("diffHe").textContent = "מצאת: " + d.he + " — איך כותבים באנגלית?";
+  $("diffInput").value = "";
+  $("diffInput").disabled = false;
+  $("diffFeedback").textContent = "";
+  $("diffAsk").classList.remove("hidden");
+  $("diffInput").focus();
+  updateDiffProgress();
+}
+
+function checkDiff(){
+  if (diffPendingIdx < 0) return;
+  const d = DIFF_CUR.diffs[diffPendingIdx];
+  const typed = $("diffInput").value.trim().toLowerCase();
+  const ok = d.en.split("|").some(k => typed === k || (k.length > 3 && typed.includes(k)));
+  if (ok){
+    addPoints(7);
+    $("diffFeedback").textContent = "נכון! +7 נקודות 🎉";
+    $("diffFeedback").className = "ok";
+  } else {
+    $("diffFeedback").textContent = "לא נכון. ממשיכים להבדל הבא";
+    $("diffFeedback").className = "bad";
+  }
+  $("diffInput").disabled = true;
+  diffPendingIdx = -1;
+  const done = diffSolved.length >= DIFF_CUR.diffs.length;
+  setTimeout(() => {
+    $("diffAsk").classList.add("hidden");
+    if (done) diffDone();
+  }, 1200);
+}
+
+function diffDone(){
+  $("diffResult").textContent = "סיימת! מצאת את כל 8 ההבדלים 🎉";
+  confetti();
+}
+
 // ===== טקסטים ושאלות לפי כיתה: לכל כיתה שלושה טקסטים, עם מספר השורות והשאלות של הכיתה =====
 // כל שאלה: [השאלה, התשובה שמוצגת, מילות מפתח מופרדות ב-|]
 const READING = {
@@ -1722,6 +1975,87 @@ const READING = {
     [
      "mc",
      "The bird sings at night.",
+     [
+      "True",
+      "False"
+     ],
+     1
+    ]
+   ]
+  },
+  {
+   "title": "הקשת בענן",
+   "lines": [
+    "I can see a big rainbow up in the sky."
+   ],
+   "qs": [
+    [
+     "mc",
+     "Where is the rainbow?",
+     [
+      "in the sea",
+      "in the sky",
+      "in a box"
+     ],
+     1
+    ],
+    [
+     "mc",
+     "The rainbow is big.",
+     [
+      "True",
+      "False"
+     ],
+     0
+    ]
+   ]
+  },
+  {
+   "title": "הבלון שלי",
+   "lines": [
+    "My red balloon can fly up high."
+   ],
+   "qs": [
+    [
+     "mc",
+     "What color is the balloon?",
+     [
+      "red",
+      "blue",
+      "green"
+     ],
+     0
+    ],
+    [
+     "mc",
+     "The balloon can fly up high.",
+     [
+      "True",
+      "False"
+     ],
+     0
+    ]
+   ]
+  },
+  {
+   "title": "איש השלג",
+   "lines": [
+    "We made a white snowman in the snow."
+   ],
+   "qs": [
+    [
+     "mc",
+     "What color is the snowman?",
+     [
+      "black",
+      "white",
+      "red"
+     ],
+     1
+    ],
+    [
+     "mc",
+     "We made the snowman in the rain.",
      [
       "True",
       "False"
@@ -2102,6 +2436,145 @@ const READING = {
       "a sweet apple cake"
      ],
      2
+    ]
+   ]
+  },
+  {
+   "title": "יום שלג",
+   "lines": [
+    "On a cold morning, snow covered the whole garden.",
+    "We put on warm coats, hats, and gloves.",
+    "My brother and I made a big snowman with a carrot nose.",
+    "After that, we drank hot chocolate inside."
+   ],
+   "qs": [
+    [
+     "mc",
+     "What covered the garden?",
+     [
+      "snow",
+      "sand",
+      "leaves"
+     ],
+     0
+    ],
+    [
+     "mc",
+     "What did they wear?",
+     [
+      "swimsuits",
+      "warm coats and gloves",
+      "pajamas"
+     ],
+     1
+    ],
+    [
+     "tx",
+     "What did the snowman have for a nose?",
+     "a carrot",
+     "carrot"
+    ],
+    [
+     "mc",
+     "What did they drink inside?",
+     [
+      "cold water",
+      "hot chocolate",
+      "orange juice"
+     ],
+     1
+    ]
+   ]
+  },
+  {
+   "title": "מופע קסמים",
+   "lines": [
+    "On Saturday, a magician came to our school.",
+    "He pulled a white rabbit out of a black hat.",
+    "Then he made a coin disappear and come back.",
+    "All the children laughed and clapped."
+   ],
+   "qs": [
+    [
+     "mc",
+     "When did the magician come?",
+     [
+      "on Sunday",
+      "on Saturday",
+      "on Monday"
+     ],
+     1
+    ],
+    [
+     "mc",
+     "What did he pull out of the hat?",
+     [
+      "a white rabbit",
+      "a bird",
+      "a flower"
+     ],
+     0
+    ],
+    [
+     "tx",
+     "What did he make disappear?",
+     "a coin",
+     "coin"
+    ],
+    [
+     "mc",
+     "The children clapped.",
+     [
+      "True",
+      "False"
+     ],
+     0
+    ]
+   ]
+  },
+  {
+   "title": "יום בבריכה",
+   "lines": [
+    "On a hot day, we went to the swimming pool.",
+    "The water was cool and blue.",
+    "I learned to float on my back.",
+    "We ate ice cream on the way home."
+   ],
+   "qs": [
+    [
+     "mc",
+     "When did they go to the pool?",
+     [
+      "on a cold day",
+      "on a hot day",
+      "at night"
+     ],
+     1
+    ],
+    [
+     "mc",
+     "What color was the water?",
+     [
+      "green",
+      "blue",
+      "red"
+     ],
+     1
+    ],
+    [
+     "tx",
+     "What did I learn to do?",
+     "float on my back",
+     "float"
+    ],
+    [
+     "mc",
+     "They ate ice cream on the way home.",
+     [
+      "True",
+      "False"
+     ],
+     0
     ]
    ]
   }
@@ -2666,6 +3139,204 @@ const READING = {
       "a big hug"
      ],
      2
+    ]
+   ]
+  },
+  {
+   "title": "ביקור בתחנת כבאות",
+   "lines": [
+    "On Monday, our class visited the fire station in town.",
+    "A friendly firefighter showed us the big red fire truck.",
+    "He explained that the truck carries water, ladders, and hoses.",
+    "We learned that firefighters slide down a tall pole to save time.",
+    "One firefighter let us try on a heavy helmet.",
+    "They taught us to call for help if we ever see a fire.",
+    "At the end, we petted the station's spotted dog.",
+    "Everyone wanted to be a firefighter when they grow up."
+   ],
+   "qs": [
+    [
+     "mc",
+     "Where did the class go?",
+     [
+      "the police station",
+      "the fire station",
+      "the hospital"
+     ],
+     1
+    ],
+    [
+     "mc",
+     "What color was the fire truck?",
+     [
+      "red",
+      "blue",
+      "yellow"
+     ],
+     0
+    ],
+    [
+     "mc",
+     "What does the truck carry?",
+     [
+      "toys",
+      "water, ladders, and hoses",
+      "food"
+     ],
+     1
+    ],
+    [
+     "tx",
+     "What do firefighters slide down to save time?",
+     "a pole",
+     "pole"
+    ],
+    [
+     "mc",
+     "They tried on a heavy helmet.",
+     [
+      "True",
+      "False"
+     ],
+     0
+    ],
+    [
+     "tx",
+     "What animal did they pet?",
+     "the station's dog",
+     "dog"
+    ]
+   ]
+  },
+  {
+   "title": "הר געש בכיתה",
+   "lines": [
+    "In science class, we made a model volcano from clay.",
+    "Our teacher told us to shape it like a tall mountain.",
+    "Inside, we put baking soda and a little red color.",
+    "Then we poured vinegar into the top.",
+    "The volcano began to bubble and foam over the sides.",
+    "The red foam looked just like flowing lava.",
+    "We learned that real volcanoes send out hot melted rock.",
+    "It was the most exciting lesson of the week."
+   ],
+   "qs": [
+    [
+     "mc",
+     "What was the model volcano made from?",
+     [
+      "clay",
+      "paper",
+      "ice"
+     ],
+     0
+    ],
+    [
+     "mc",
+     "What shape did they make it?",
+     [
+      "a flat circle",
+      "a tall mountain",
+      "a box"
+     ],
+     1
+    ],
+    [
+     "tx",
+     "What did they put inside with the red color?",
+     "baking soda",
+     "baking soda|soda"
+    ],
+    [
+     "mc",
+     "What did they pour into the top?",
+     [
+      "water",
+      "vinegar",
+      "milk"
+     ],
+     1
+    ],
+    [
+     "mc",
+     "The foam looked like lava.",
+     [
+      "True",
+      "False"
+     ],
+     0
+    ],
+    [
+     "tx",
+     "What do real volcanoes send out?",
+     "hot melted rock",
+     "rock|lava"
+    ]
+   ]
+  },
+  {
+   "title": "קמפינג תחת הכוכבים",
+   "lines": [
+    "Last weekend, my family went camping near a quiet forest.",
+    "We set up a green tent next to a small river.",
+    "In the evening, Dad lit a safe campfire.",
+    "We roasted marshmallows until they were golden.",
+    "When it got dark, the sky filled with bright stars.",
+    "My mom showed us how to find the Big Dipper.",
+    "We heard an owl calling somewhere in the trees.",
+    "I fell asleep listening to the sound of the river."
+   ],
+   "qs": [
+    [
+     "mc",
+     "Where did the family go camping?",
+     [
+      "near a forest",
+      "in the city",
+      "at the beach"
+     ],
+     0
+    ],
+    [
+     "mc",
+     "What color was the tent?",
+     [
+      "blue",
+      "green",
+      "red"
+     ],
+     1
+    ],
+    [
+     "tx",
+     "What did they roast on the fire?",
+     "marshmallows",
+     "marshmallow"
+    ],
+    [
+     "mc",
+     "What did Mom show them in the sky?",
+     [
+      "the moon",
+      "the Big Dipper",
+      "a plane"
+     ],
+     1
+    ],
+    [
+     "mc",
+     "They heard an owl in the trees.",
+     [
+      "True",
+      "False"
+     ],
+     0
+    ],
+    [
+     "tx",
+     "What sound did I fall asleep to?",
+     "the river",
+     "river"
     ]
    ]
   }
@@ -3541,6 +4212,325 @@ const READING = {
       "to look ahead, not down at the wheels",
       "to ride very fast",
       "to close her eyes"
+     ],
+     0
+    ]
+   ]
+  },
+  {
+   "title": "סיור במפעל שוקולד",
+   "lines": [
+    "On a rainy Tuesday, our class took a bus to a chocolate factory.",
+    "At the door, everyone put on white coats and hairnets.",
+    "A guide explained that chocolate starts from cocoa beans.",
+    "We watched huge machines grind the beans into a smooth paste.",
+    "The warm smell of chocolate filled the whole room.",
+    "Workers poured the liquid chocolate into molds shaped like animals.",
+    "A cold tunnel made the chocolate hard in just a few minutes.",
+    "We saw a machine wrap each piece in shiny paper.",
+    "The guide told us the factory makes thousands of bars every day.",
+    "At the end, each child got a small chocolate bear to taste.",
+    "Dana said it was the best field trip she had ever been on.",
+    "On the bus home, we drew pictures of the machines.",
+    "Our teacher promised we would make our own treats next week."
+   ],
+   "qs": [
+    [
+     "mc",
+     "When did the class go?",
+     [
+      "a sunny Monday",
+      "a rainy Tuesday",
+      "a snowy Friday"
+     ],
+     1
+    ],
+    [
+     "mc",
+     "What did everyone put on?",
+     [
+      "white coats and hairnets",
+      "raincoats",
+      "gloves only"
+     ],
+     0
+    ],
+    [
+     "mc",
+     "What does chocolate start from?",
+     [
+      "cocoa beans",
+      "sugar cubes",
+      "milk"
+     ],
+     0
+    ],
+    [
+     "tx",
+     "What did the machines grind the beans into?",
+     "a smooth paste",
+     "paste"
+    ],
+    [
+     "mc",
+     "What were the molds shaped like?",
+     [
+      "cars",
+      "animals",
+      "letters"
+     ],
+     1
+    ],
+    [
+     "mc",
+     "What made the chocolate hard quickly?",
+     [
+      "a cold tunnel",
+      "a hot oven",
+      "the sun"
+     ],
+     0
+    ],
+    [
+     "tx",
+     "What were the pieces wrapped in?",
+     "shiny paper",
+     "paper|shiny"
+    ],
+    [
+     "mc",
+     "The factory makes thousands of bars every day.",
+     [
+      "True",
+      "False"
+     ],
+     0
+    ],
+    [
+     "tx",
+     "What did each child get to taste?",
+     "a chocolate bear",
+     "bear|chocolate"
+    ],
+    [
+     "mc",
+     "What did the teacher promise for next week?",
+     [
+      "a test",
+      "to make their own treats",
+      "a holiday"
+     ],
+     1
+    ]
+   ]
+  },
+  {
+   "title": "לומדים לשחות",
+   "lines": [
+    "This summer, Amit decided to learn how to swim.",
+    "At first, he was afraid to put his face in the water.",
+    "His teacher, Dana, stood beside him in the shallow pool.",
+    "She showed him how to blow bubbles under the water.",
+    "Day by day, Amit grew braver and more relaxed.",
+    "He learned to float on his back like a starfish.",
+    "Then he practiced kicking his legs and moving his arms.",
+    "After two weeks, he swam across the shallow pool by himself.",
+    "His parents clapped proudly from the side.",
+    "Soon he could even jump in and swim back to the ladder.",
+    "Amit learned that practice and patience really matter.",
+    "He made new friends who also took swimming lessons.",
+    "Now swimming is his favorite thing to do in summer."
+   ],
+   "qs": [
+    [
+     "mc",
+     "What did Amit want to learn?",
+     [
+      "to swim",
+      "to dive deep",
+      "to sail"
+     ],
+     0
+    ],
+    [
+     "mc",
+     "Why was he afraid at first?",
+     [
+      "of the water on his face",
+      "of the teacher",
+      "of the ladder"
+     ],
+     0
+    ],
+    [
+     "tx",
+     "Who was his teacher?",
+     "Dana",
+     "dana"
+    ],
+    [
+     "mc",
+     "What did she show him to blow under the water?",
+     [
+      "bubbles",
+      "a whistle",
+      "a balloon"
+     ],
+     0
+    ],
+    [
+     "mc",
+     "He learned to float like a...?",
+     [
+      "stone",
+      "starfish",
+      "boat"
+     ],
+     1
+    ],
+    [
+     "tx",
+     "How long until he swam across the pool?",
+     "two weeks",
+     "two weeks|2 weeks"
+    ],
+    [
+     "mc",
+     "His parents clapped from the side.",
+     [
+      "True",
+      "False"
+     ],
+     0
+    ],
+    [
+     "tx",
+     "What did Amit learn really matters?",
+     "practice and patience",
+     "practice|patience"
+    ],
+    [
+     "mc",
+     "What is now his favorite summer thing?",
+     [
+      "swimming",
+      "reading",
+      "cycling"
+     ],
+     0
+    ],
+    [
+     "mc",
+     "He made new friends at the lessons.",
+     [
+      "True",
+      "False"
+     ],
+     0
+    ]
+   ]
+  },
+  {
+   "title": "פרויקט מיחזור בכיתה",
+   "lines": [
+    "This year, our class started a recycling project at school.",
+    "We placed three colorful bins in every classroom.",
+    "The blue bin was for paper, the yellow one for plastic.",
+    "The green bin was for glass bottles and jars.",
+    "Each week, two students checked that the bins were used correctly.",
+    "We learned that recycling saves trees, energy, and water.",
+    "A truck came every Friday to collect the full bins.",
+    "Our teacher showed us how old paper becomes new notebooks.",
+    "The class made posters to remind everyone not to waste.",
+    "We even turned empty cans into pencil holders for art.",
+    "By spring, the whole school had joined our project.",
+    "The principal gave our class a special green team award.",
+    "We felt proud that our small habit helped the planet."
+   ],
+   "qs": [
+    [
+     "mc",
+     "What project did the class start?",
+     [
+      "a recycling project",
+      "a garden",
+      "a bake sale"
+     ],
+     0
+    ],
+    [
+     "mc",
+     "How many bins were in each classroom?",
+     [
+      "two",
+      "three",
+      "five"
+     ],
+     1
+    ],
+    [
+     "tx",
+     "What was the blue bin for?",
+     "paper",
+     "paper"
+    ],
+    [
+     "mc",
+     "What was the green bin for?",
+     [
+      "plastic",
+      "glass bottles and jars",
+      "food"
+     ],
+     1
+    ],
+    [
+     "mc",
+     "What does recycling save?",
+     [
+      "trees, energy, and water",
+      "money only",
+      "time only"
+     ],
+     0
+    ],
+    [
+     "tx",
+     "When did the truck collect the bins?",
+     "every Friday",
+     "friday"
+    ],
+    [
+     "mc",
+     "Old paper can become new notebooks.",
+     [
+      "True",
+      "False"
+     ],
+     0
+    ],
+    [
+     "tx",
+     "What did they turn empty cans into?",
+     "pencil holders",
+     "pencil|holder"
+    ],
+    [
+     "mc",
+     "What award did the class get?",
+     [
+      "best class",
+      "a green team award",
+      "a sports cup"
+     ],
+     1
+    ],
+    [
+     "mc",
+     "By spring the whole school joined.",
+     [
+      "True",
+      "False"
      ],
      0
     ]
@@ -4759,6 +5749,453 @@ const READING = {
       "a safe beach is a home for the turtles",
       "turtles are the fastest animals",
       "the sea belongs to the fish"
+     ],
+     0
+    ]
+   ]
+  },
+  {
+   "title": "תחנת מזג האוויר",
+   "lines": [
+    "Last month, our fifth-grade class visited a weather station on a hill.",
+    "A scientist named Dr. Noa welcomed us at the gate.",
+    "She explained that the station measures the weather every single minute.",
+    "Outside, a spinning cup device counted how fast the wind blew.",
+    "Dr. Noa called it an anemometer, and we each took turns reading it.",
+    "A tall pole held a thermometer that showed the air temperature.",
+    "Nearby, a round rain gauge collected drops to measure the rainfall.",
+    "Inside the building, screens showed colorful maps of the whole country.",
+    "The scientist pointed to a swirl of clouds moving toward the coast.",
+    "She told us it was a storm that would arrive the next day.",
+    "We learned that weather forecasts help farmers and pilots plan ahead.",
+    "A big balloon was released to carry instruments high into the sky.",
+    "The balloon sent back information about the air far above us.",
+    "Dr. Noa explained that warm air rises and cooler air sinks.",
+    "This movement of air is what creates wind and clouds.",
+    "One student asked how snow forms, and she gave a clear answer.",
+    "She said tiny ice crystals join together inside very cold clouds.",
+    "Before we left, each of us drew our own weather map.",
+    "We marked the sun, the clouds, and the rain with bright colors.",
+    "The visit made us look at the sky with new, curious eyes."
+   ],
+   "qs": [
+    [
+     "mc",
+     "Where was the weather station?",
+     [
+      "on a hill",
+      "by the sea",
+      "in a valley"
+     ],
+     0
+    ],
+    [
+     "mc",
+     "How often does the station measure the weather?",
+     [
+      "every minute",
+      "once a day",
+      "once a week"
+     ],
+     0
+    ],
+    [
+     "tx",
+     "What is the spinning cup device called?",
+     "an anemometer",
+     "anemometer"
+    ],
+    [
+     "mc",
+     "What did the thermometer show?",
+     [
+      "the wind",
+      "the air temperature",
+      "the rain"
+     ],
+     1
+    ],
+    [
+     "mc",
+     "What collected drops to measure rainfall?",
+     [
+      "a rain gauge",
+      "a cup of tea",
+      "a bucket of sand"
+     ],
+     0
+    ],
+    [
+     "tx",
+     "What did the screens inside show?",
+     "maps of the country",
+     "map"
+    ],
+    [
+     "mc",
+     "What was moving toward the coast?",
+     [
+      "a storm",
+      "a plane",
+      "a flock of birds"
+     ],
+     0
+    ],
+    [
+     "mc",
+     "Weather forecasts help farmers and pilots.",
+     [
+      "True",
+      "False"
+     ],
+     0
+    ],
+    [
+     "tx",
+     "What was released to carry instruments up high?",
+     "a balloon",
+     "balloon"
+    ],
+    [
+     "mc",
+     "What does warm air do?",
+     [
+      "sinks",
+      "rises",
+      "stops"
+     ],
+     1
+    ],
+    [
+     "mc",
+     "What creates wind and clouds?",
+     [
+      "the movement of air",
+      "the ocean only",
+      "the moon"
+     ],
+     0
+    ],
+    [
+     "tx",
+     "What join together to form snow?",
+     "ice crystals",
+     "ice|crystal"
+    ],
+    [
+     "mc",
+     "What did each student draw before leaving?",
+     [
+      "a weather map",
+      "a robot",
+      "a castle"
+     ],
+     0
+    ],
+    [
+     "mc",
+     "The visit made them curious about the sky.",
+     [
+      "True",
+      "False"
+     ],
+     0
+    ]
+   ]
+  },
+  {
+   "title": "דבורים בגינת בית הספר",
+   "lines": [
+    "In spring, our school placed a safe beehive at the edge of the garden.",
+    "A beekeeper named Mr. Ari came to teach us about the bees.",
+    "He wore a white suit and a hat with a net to stay protected.",
+    "He explained that a single hive can hold thousands of bees.",
+    "Each hive has one queen, many workers, and some drones.",
+    "The queen's only job is to lay eggs for the whole colony.",
+    "Worker bees fly from flower to flower collecting sweet nectar.",
+    "While they drink, they carry yellow pollen on their legs.",
+    "This pollen helps the flowers make seeds and new fruit.",
+    "Mr. Ari said that without bees, many plants could not grow.",
+    "Back at the hive, the bees turn the nectar into golden honey.",
+    "They store the honey inside tiny six-sided wax cells.",
+    "We watched the bees dance in a figure-eight pattern.",
+    "The beekeeper told us the dance shows where good flowers are.",
+    "He carefully opened the hive and showed us a honeycomb.",
+    "The sweet smell of honey filled the warm spring air.",
+    "We learned never to wave our arms near a buzzing bee.",
+    "Instead, we should stay calm and move away slowly.",
+    "At the end, Mr. Ari gave the class a small jar of honey.",
+    "We promised to plant more flowers to help our busy bees."
+   ],
+   "qs": [
+    [
+     "mc",
+     "Where was the beehive placed?",
+     [
+      "at the edge of the garden",
+      "on the roof",
+      "in a classroom"
+     ],
+     0
+    ],
+    [
+     "tx",
+     "Who taught the class about bees?",
+     "Mr. Ari",
+     "ari"
+    ],
+    [
+     "mc",
+     "Why did he wear a net hat?",
+     [
+      "to stay protected",
+      "to look funny",
+      "to keep warm"
+     ],
+     0
+    ],
+    [
+     "mc",
+     "How many bees can one hive hold?",
+     [
+      "thousands",
+      "ten",
+      "a hundred"
+     ],
+     0
+    ],
+    [
+     "mc",
+     "What is the queen's only job?",
+     [
+      "to lay eggs",
+      "to collect nectar",
+      "to guard the door"
+     ],
+     0
+    ],
+    [
+     "tx",
+     "What do worker bees collect from flowers?",
+     "nectar",
+     "nectar"
+    ],
+    [
+     "mc",
+     "What do bees carry on their legs?",
+     [
+      "yellow pollen",
+      "sand",
+      "water"
+     ],
+     0
+    ],
+    [
+     "mc",
+     "Pollen helps flowers make seeds and fruit.",
+     [
+      "True",
+      "False"
+     ],
+     0
+    ],
+    [
+     "tx",
+     "What do bees turn the nectar into?",
+     "honey",
+     "honey"
+    ],
+    [
+     "mc",
+     "What shape are the wax cells?",
+     [
+      "round",
+      "six-sided",
+      "square"
+     ],
+     1
+    ],
+    [
+     "mc",
+     "What does the bees' dance show?",
+     [
+      "where good flowers are",
+      "the time",
+      "the weather"
+     ],
+     0
+    ],
+    [
+     "tx",
+     "What should you do near a buzzing bee?",
+     "stay calm and move away slowly",
+     "calm|slowly"
+    ],
+    [
+     "mc",
+     "What did Mr. Ari give the class?",
+     [
+      "a jar of honey",
+      "a flower",
+      "a book"
+     ],
+     0
+    ],
+    [
+     "mc",
+     "They promised to plant more flowers.",
+     [
+      "True",
+      "False"
+     ],
+     0
+    ]
+   ]
+  },
+  {
+   "title": "חקר מערה",
+   "lines": [
+    "During our summer trip, we explored a huge cave in the mountains.",
+    "A guide gave each of us a helmet with a small bright light.",
+    "The air inside the cave was cool, damp, and very quiet.",
+    "From the ceiling hung long pointed rocks called stalactites.",
+    "Rising from the floor were thicker rocks called stalagmites.",
+    "The guide said these rocks grow only one centimeter in a hundred years.",
+    "Water dripped slowly, adding tiny layers of minerals each time.",
+    "Our lights made the wet walls sparkle like silver.",
+    "Deep inside, we reached a wide room as tall as a house.",
+    "The guide asked us to switch off our lights for a moment.",
+    "Suddenly we were in the darkest darkness we had ever felt.",
+    "When the lights returned, everyone sighed with relief.",
+    "We spotted a small group of bats sleeping on the ceiling.",
+    "The guide whispered so we would not wake them.",
+    "Bats, he said, leave the cave at night to hunt insects.",
+    "A narrow stream ran along the floor of the cave.",
+    "Pale fish with no color swam in the cold, clear water.",
+    "They had lived in the dark so long that they lost their sight.",
+    "We climbed back toward the entrance, tired but amazed.",
+    "Stepping into the sunlight felt warm and wonderful."
+   ],
+   "qs": [
+    [
+     "mc",
+     "Where was the cave?",
+     [
+      "in the mountains",
+      "by the sea",
+      "in a forest"
+     ],
+     0
+    ],
+    [
+     "mc",
+     "What did the guide give each person?",
+     [
+      "a helmet with a light",
+      "a map",
+      "a rope only"
+     ],
+     0
+    ],
+    [
+     "tx",
+     "What hangs from the ceiling?",
+     "stalactites",
+     "stalactite"
+    ],
+    [
+     "mc",
+     "What rises from the floor?",
+     [
+      "stalagmites",
+      "trees",
+      "chairs"
+     ],
+     0
+    ],
+    [
+     "mc",
+     "How fast do these rocks grow?",
+     [
+      "one centimeter in a hundred years",
+      "one meter a year",
+      "very fast"
+     ],
+     0
+    ],
+    [
+     "tx",
+     "What made the walls sparkle?",
+     "their lights",
+     "light"
+    ],
+    [
+     "mc",
+     "What did the guide ask them to do for a moment?",
+     [
+      "switch off the lights",
+      "sing",
+      "run"
+     ],
+     0
+    ],
+    [
+     "mc",
+     "They saw bats sleeping on the ceiling.",
+     [
+      "True",
+      "False"
+     ],
+     0
+    ],
+    [
+     "tx",
+     "When do bats leave the cave?",
+     "at night",
+     "night"
+    ],
+    [
+     "mc",
+     "What ran along the floor of the cave?",
+     [
+      "a narrow stream",
+      "a road",
+      "a train track"
+     ],
+     0
+    ],
+    [
+     "mc",
+     "What was special about the pale fish?",
+     [
+      "they had no color and no sight",
+      "they could fly",
+      "they glowed"
+     ],
+     0
+    ],
+    [
+     "tx",
+     "Why had the fish lost their sight?",
+     "they lived in the dark so long",
+     "dark"
+    ],
+    [
+     "mc",
+     "How did they feel climbing back?",
+     [
+      "tired but amazed",
+      "bored",
+      "scared"
+     ],
+     0
+    ],
+    [
+     "mc",
+     "Stepping into the sunlight felt wonderful.",
+     [
+      "True",
+      "False"
      ],
      0
     ]
@@ -6336,6 +7773,589 @@ const READING = {
      "What do some experts say about the modern Olympics?",
      "they have become too expensive",
      "expensive|cost"
+    ]
+   ]
+  },
+  {
+   "title": "איך מטוסים טסים",
+   "lines": [
+    "Have you ever wondered how a heavy metal airplane can rise into the sky?",
+    "The answer lies in four forces that act on every aircraft.",
+    "These forces are called lift, weight, thrust, and drag.",
+    "Weight is the pull of gravity, which tries to bring the plane down.",
+    "Lift is the upward force that holds the plane in the air.",
+    "Thrust is the forward push created by the engines.",
+    "Drag is the resistance of the air pushing against the moving plane.",
+    "To fly, a plane must create more lift than its weight.",
+    "The secret to lift is the special shape of the wings.",
+    "A wing is curved on top and flatter on the bottom.",
+    "As the plane speeds forward, air rushes over and under the wing.",
+    "The air moving over the curved top travels faster than the air below.",
+    "Faster air has lower pressure, and slower air has higher pressure.",
+    "The higher pressure below pushes the wing upward, creating lift.",
+    "This idea was described long ago by a scientist named Bernoulli.",
+    "Pilots control the plane using movable parts on the wings and tail.",
+    "Flaps on the wings help create extra lift during takeoff and landing.",
+    "A part called the rudder helps the plane turn left or right.",
+    "Powerful jet engines suck in air, heat it, and blast it out the back.",
+    "This blast pushes the plane forward with tremendous force.",
+    "At high altitude, the air is thin, so planes face less drag.",
+    "Thin air lets them fly faster while using less fuel.",
+    "That is why long flights climb very high into the sky.",
+    "The cabin is sealed and filled with air so passengers can breathe.",
+    "Engineers test every new design in a wind tunnel before it flies.",
+    "They watch how air flows around a small model of the plane.",
+    "Modern planes also use computers to help the pilot stay safe.",
+    "Birds, in a way, were the first teachers of human flight.",
+    "Early inventors studied wings and feathers for many years.",
+    "Today, millions of people travel the world thanks to these ideas."
+   ],
+   "qs": [
+    [
+     "mc",
+     "How many forces act on an aircraft?",
+     [
+      "two",
+      "four",
+      "six"
+     ],
+     1
+    ],
+    [
+     "tx",
+     "What force is the pull of gravity?",
+     "weight",
+     "weight"
+    ],
+    [
+     "mc",
+     "What holds the plane up in the air?",
+     [
+      "lift",
+      "drag",
+      "weight"
+     ],
+     0
+    ],
+    [
+     "mc",
+     "What creates thrust?",
+     [
+      "the engines",
+      "the wings",
+      "the tail"
+     ],
+     0
+    ],
+    [
+     "tx",
+     "What is the resistance of the air called?",
+     "drag",
+     "drag"
+    ],
+    [
+     "mc",
+     "A plane flies when lift is...?",
+     [
+      "less than its weight",
+      "more than its weight",
+      "equal to drag"
+     ],
+     1
+    ],
+    [
+     "mc",
+     "How is a wing shaped?",
+     [
+      "curved on top, flatter below",
+      "flat on both sides",
+      "round like a ball"
+     ],
+     0
+    ],
+    [
+     "mc",
+     "Air moving over the top of the wing is...?",
+     [
+      "faster",
+      "slower",
+      "still"
+     ],
+     0
+    ],
+    [
+     "tx",
+     "Faster air has lower what?",
+     "pressure",
+     "pressure"
+    ],
+    [
+     "mc",
+     "Which scientist described this idea?",
+     [
+      "Bernoulli",
+      "Newton",
+      "Einstein"
+     ],
+     0
+    ],
+    [
+     "tx",
+     "What on the wings gives extra lift at takeoff?",
+     "flaps",
+     "flap"
+    ],
+    [
+     "mc",
+     "What helps the plane turn left or right?",
+     [
+      "the rudder",
+      "the flaps",
+      "the window"
+     ],
+     0
+    ],
+    [
+     "mc",
+     "What do jet engines do with air?",
+     [
+      "suck it in, heat it, blast it out",
+      "store it",
+      "freeze it"
+     ],
+     0
+    ],
+    [
+     "mc",
+     "Why do long flights climb very high?",
+     [
+      "thin air means less drag",
+      "it is colder",
+      "to see the stars"
+     ],
+     0
+    ],
+    [
+     "tx",
+     "Where do engineers test a new design?",
+     "a wind tunnel",
+     "wind tunnel|tunnel"
+    ],
+    [
+     "mc",
+     "Why is the cabin sealed and filled with air?",
+     [
+      "so passengers can breathe",
+      "to keep it quiet",
+      "to save fuel"
+     ],
+     0
+    ],
+    [
+     "mc",
+     "Who were the first teachers of human flight?",
+     [
+      "birds",
+      "fish",
+      "engines"
+     ],
+     0
+    ],
+    [
+     "mc",
+     "Modern planes use computers to help the pilot.",
+     [
+      "True",
+      "False"
+     ],
+     0
+    ]
+   ]
+  },
+  {
+   "title": "ההיסטוריה של האינטרנט",
+   "lines": [
+    "The internet is a giant network that connects computers all over the world.",
+    "It began as a small project in the United States in the 1960s.",
+    "Scientists wanted a way for computers to share information quickly.",
+    "They also wanted a network that would keep working if one part failed.",
+    "The first message was sent between two computers in 1969.",
+    "It was meant to say the word login, but the system crashed after two letters.",
+    "For many years, only universities and the army used this network.",
+    "In the 1970s, engineers created rules called protocols for sending data.",
+    "These rules let different kinds of computers understand each other.",
+    "Information travels in small pieces called packets.",
+    "Each packet finds its own path and the pieces join again at the end.",
+    "In 1989, a scientist named Tim Berners-Lee had a big idea.",
+    "He invented the World Wide Web to share pages linked together.",
+    "Soon people could click on links to jump from page to page.",
+    "The first web browsers made the internet easy for everyone to use.",
+    "In the 1990s, millions of homes connected for the very first time.",
+    "Early connections were slow and used noisy telephone lines.",
+    "Later, faster cables and fiber brought speeds thousands of times greater.",
+    "Search engines were built to help people find pages among billions.",
+    "Email let people send letters across the world in seconds.",
+    "Today, phones connect to the internet without any wires at all.",
+    "Satellites and undersea cables carry data between distant countries.",
+    "A single undersea cable can be thousands of kilometers long.",
+    "The internet now links more devices than there are people on Earth.",
+    "It lets us learn, play, shop, and talk with friends far away.",
+    "But it also brings dangers, like false information and scams.",
+    "Experts remind us to think carefully about what we read online.",
+    "Keeping passwords secret helps protect our private information.",
+    "The internet keeps changing faster than almost any invention in history.",
+    "No one knows exactly what it will look like in the future."
+   ],
+   "qs": [
+    [
+     "mc",
+     "What is the internet?",
+     [
+      "a network connecting computers worldwide",
+      "a single computer",
+      "a type of phone"
+     ],
+     0
+    ],
+    [
+     "mc",
+     "When did it begin as a project?",
+     [
+      "the 1960s",
+      "the 1990s",
+      "the 2010s"
+     ],
+     0
+    ],
+    [
+     "tx",
+     "In what year was the first message sent?",
+     "1969",
+     "1969"
+    ],
+    [
+     "mc",
+     "What word was the first message meant to say?",
+     [
+      "hello",
+      "login",
+      "start"
+     ],
+     1
+    ],
+    [
+     "mc",
+     "Who used the network for many years at first?",
+     [
+      "universities and the army",
+      "children",
+      "shops"
+     ],
+     0
+    ],
+    [
+     "tx",
+     "What are the rules for sending data called?",
+     "protocols",
+     "protocol"
+    ],
+    [
+     "mc",
+     "Information travels in small pieces called...?",
+     [
+      "packets",
+      "boxes",
+      "drops"
+     ],
+     0
+    ],
+    [
+     "tx",
+     "Who invented the World Wide Web?",
+     "Tim Berners-Lee",
+     "berners|tim"
+    ],
+    [
+     "mc",
+     "In what year did he have the idea?",
+     [
+      "1969",
+      "1989",
+      "1999"
+     ],
+     1
+    ],
+    [
+     "mc",
+     "What do people click to jump between pages?",
+     [
+      "links",
+      "the screen only",
+      "keys"
+     ],
+     0
+    ],
+    [
+     "mc",
+     "Early connections used what?",
+     [
+      "noisy telephone lines",
+      "fast fiber",
+      "satellites only"
+     ],
+     0
+    ],
+    [
+     "tx",
+     "What helps people find pages among billions?",
+     "search engines",
+     "search engine|search"
+    ],
+    [
+     "mc",
+     "What lets people send letters in seconds?",
+     [
+      "email",
+      "packets",
+      "browsers"
+     ],
+     0
+    ],
+    [
+     "mc",
+     "How do phones connect today?",
+     [
+      "without wires",
+      "only with cables",
+      "through the radio"
+     ],
+     0
+    ],
+    [
+     "tx",
+     "What carries data between distant countries under the sea?",
+     "undersea cables",
+     "cable|undersea"
+    ],
+    [
+     "mc",
+     "The internet links more devices than there are people on Earth.",
+     [
+      "True",
+      "False"
+     ],
+     0
+    ],
+    [
+     "mc",
+     "What danger does the internet bring?",
+     [
+      "false information and scams",
+      "too many books",
+      "slow cars"
+     ],
+     0
+    ],
+    [
+     "tx",
+     "What helps protect our private information?",
+     "keeping passwords secret",
+     "password"
+    ]
+   ]
+  },
+  {
+   "title": "נדידת ציפורים",
+   "lines": [
+    "Every autumn, billions of birds set off on an amazing journey.",
+    "This long trip between seasons is called migration.",
+    "Birds migrate to find food and warmer weather for the winter.",
+    "When spring returns, they fly all the way back to breed.",
+    "Some birds travel only a short distance down a mountain.",
+    "Others cross whole oceans and continents without stopping.",
+    "The Arctic tern makes the longest journey of any animal.",
+    "It flies from the top of the world to the bottom and back each year.",
+    "That round trip can be over seventy thousand kilometers long.",
+    "Scientists have long wondered how birds find their way.",
+    "Many birds use the sun and the stars to guide them.",
+    "Others can sense the Earth's invisible magnetic field.",
+    "This hidden sense works like a compass inside their bodies.",
+    "Some birds also remember rivers, coasts, and mountains below.",
+    "Before a long flight, birds eat a great deal to store energy as fat.",
+    "A tiny bird may almost double its weight before leaving.",
+    "Many species fly together in large flocks for safety.",
+    "Geese often travel in a neat V-shaped formation.",
+    "Flying in a V lets each bird save energy behind the one ahead.",
+    "The leader works hardest, so the birds take turns at the front.",
+    "Migration is dangerous, with storms, hunger, and tall buildings.",
+    "Bright city lights can confuse birds and send them off course.",
+    "Some cities now dim their lights during the migration season.",
+    "Scientists place tiny light tags on birds to track their routes.",
+    "These tags reveal secret paths that were unknown before.",
+    "Protecting resting places along the way is very important.",
+    "Birds need safe wetlands and forests to feed and recover.",
+    "If these places disappear, whole journeys can fail.",
+    "People around the world now work together to keep the routes safe.",
+    "Thanks to this care, the great journeys continue year after year."
+   ],
+   "qs": [
+    [
+     "mc",
+     "What is the long seasonal trip called?",
+     [
+      "migration",
+      "vacation",
+      "nesting"
+     ],
+     0
+    ],
+    [
+     "mc",
+     "Why do birds migrate in autumn?",
+     [
+      "to find food and warmer weather",
+      "to sleep",
+      "to build nests only"
+     ],
+     0
+    ],
+    [
+     "tx",
+     "Which bird makes the longest journey?",
+     "the Arctic tern",
+     "tern|arctic"
+    ],
+    [
+     "mc",
+     "How long can that round trip be?",
+     [
+      "over seventy thousand kilometers",
+      "a hundred kilometers",
+      "ten kilometers"
+     ],
+     0
+    ],
+    [
+     "mc",
+     "What do many birds use to guide them?",
+     [
+      "the sun and the stars",
+      "paper maps",
+      "road signs"
+     ],
+     0
+    ],
+    [
+     "tx",
+     "What invisible field can some birds sense?",
+     "the Earth's magnetic field",
+     "magnetic"
+    ],
+    [
+     "mc",
+     "The magnetic sense works like a...?",
+     [
+      "compass",
+      "clock",
+      "radio"
+     ],
+     0
+    ],
+    [
+     "mc",
+     "What do birds store as fat before flying?",
+     [
+      "energy",
+      "water",
+      "air"
+     ],
+     0
+    ],
+    [
+     "tx",
+     "What may a tiny bird almost do to its weight before leaving?",
+     "double it",
+     "double"
+    ],
+    [
+     "mc",
+     "Why do many birds fly in flocks?",
+     [
+      "for safety",
+      "to race",
+      "to stay warm only"
+     ],
+     0
+    ],
+    [
+     "mc",
+     "What formation do geese often use?",
+     [
+      "a V shape",
+      "a circle",
+      "a single line"
+     ],
+     0
+    ],
+    [
+     "tx",
+     "Why do birds fly in a V?",
+     "to save energy",
+     "energy|save"
+    ],
+    [
+     "mc",
+     "Who works hardest in the V?",
+     [
+      "the leader at the front",
+      "the last bird",
+      "none of them"
+     ],
+     0
+    ],
+    [
+     "mc",
+     "What can confuse birds in cities?",
+     [
+      "bright lights",
+      "quiet streets",
+      "green parks"
+     ],
+     0
+    ],
+    [
+     "tx",
+     "What do scientists place on birds to track them?",
+     "light tags",
+     "tag"
+    ],
+    [
+     "mc",
+     "What places along the way must be protected?",
+     [
+      "resting places like wetlands and forests",
+      "airports",
+      "shops"
+     ],
+     0
+    ],
+    [
+     "mc",
+     "If resting places disappear, journeys can fail.",
+     [
+      "True",
+      "False"
+     ],
+     0
+    ],
+    [
+     "mc",
+     "People work together to keep the routes safe.",
+     [
+      "True",
+      "False"
+     ],
+     0
     ]
    ]
   }
